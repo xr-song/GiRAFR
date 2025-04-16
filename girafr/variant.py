@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 	
-
+import sys
 from . import utils
 import re
 from Bio import SeqIO
@@ -10,7 +10,7 @@ from Bio import SeqIO
 #umi_tag = 'UB' if is_10x else 'XM'
 #gene_tag = 'GN'if is_10x else 'gn'
 
-def call_variants_from_consensus(consensus_bam_in = 'consensus.bam', ref_fasta = 'oligo_pool_plasmid.fa', structure_gtf = 'oligo_pool_plasmid_structure.gtf', is_10x = True):
+def call_variants_from_consensus(consensus_bam_in = 'consensus.bam', ref_fasta = 'oligo_pool_plasmid.fa', structure_gtf = 'oligo_pool_plasmid_structure.gtf', is_10x = None, cb_tag = None, umi_tag = None, gene_tag = None):
 
 	"""
 	####### Identification of mutations in the gRNA consensus ######## 
@@ -23,10 +23,6 @@ def call_variants_from_consensus(consensus_bam_in = 'consensus.bam', ref_fasta =
 		variants = {} 2d dictionary: variants[gene][seq] = [n, cigar, nM, umi_count, ref_seq, int(min(ref_pos)), mismatch]
 		gene_mismatches = {} 2d dictionary: gene_mismatches[gene][mismatch] = [variant_nr] 
 	"""
-	cb_tag = 'CB' if is_10x else 'XC'
-	umi_tag = 'UB' if is_10x else 'XM'
-	gene_tag = 'GN'if is_10x else 'gn'
-	#nm_tag = 'nM' if is_10x else 'NM'
 
 	ref_dict = utils.read_gRNA_reference(ref_fasta, structure_gtf) # ef_dict={} Dictionary ref_dict[gRNA] = reference_sequence
 	variants = {}
@@ -48,10 +44,6 @@ def call_variants_from_consensus(consensus_bam_in = 'consensus.bam', ref_fasta =
 		nM = utils.get_read_tag(r, 'nM') # number of mismatches
 
 		ref_seq = ref_dict[gene][int(min(ref_pos)):int(max(ref_pos)) + 1] # get reference sequence, [0:5] => from 1st, 2nd, 3rd, and 4th nt. #TODO 
-		if (is_10x == False) and (utils.get_read_tag(r,'MD') != None):
-			r_seq = r.get_reference_sequence()
-			#print('Contain MD, should use MD')
-			#exit()
 
 		umi_count = 0 
 		if gene not in variants.keys():
@@ -243,7 +235,7 @@ def identify_mismatch_structure(mismatch, structure, gene, variant_attr):
 	return out
 	
 
-def call_gRNA_variant(output_dir, consensus_seq_file = 'consensus.sequence.gRNA.txt', ref_fasta = 'oligo_pool_plasmid.fa', structure_gtf = 'oligo_pool_plasmid_structure.gtf', is_10x = True):
+def call_gRNA_variant(output_dir, consensus_seq_file = 'consensus.sequence.gRNA.txt', ref_fasta = 'oligo_pool_plasmid.fa', structure_gtf = 'oligo_pool_plasmid_structure.gtf', is_10x = None, cb_tag = None, umi_tag = None, gene_tag = None):
 	
 	"""Call gRNA variant
 	Arg:
@@ -254,11 +246,7 @@ def call_gRNA_variant(output_dir, consensus_seq_file = 'consensus.sequence.gRNA.
 		Write consensus.sequence.gRNA.variant.txt
 	"""
 
-	cb_tag = 'CB' if is_10x else 'XC'
-	umi_tag = 'UB' if is_10x else 'XM'
-	gene_tag = 'GN'if is_10x else 'gn'
-
-	variants, gene_mismatches = call_variants_from_consensus(consensus_bam_in = output_dir + 'consensus.bam', ref_fasta = ref_fasta, structure_gtf = structure_gtf, is_10x = is_10x) 
+	variants, gene_mismatches = call_variants_from_consensus(consensus_bam_in = output_dir + 'consensus.bam', ref_fasta = ref_fasta, structure_gtf = structure_gtf, is_10x = is_10x, cb_tag = cb_tag, umi_tag = umi_tag, gene_tag = gene_tag) 
 	structure = utils.read_annotation_structure(structure_gtf)	
 	out = open(output_dir + 'consensus.sequence.gRNA.variant.txt', 'w')
 	with open(consensus_seq_file, 'r') as consensus_seq_in:

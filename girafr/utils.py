@@ -19,13 +19,13 @@ def create_bam_infile(file_name):
 
 
 def get_read_tag(read, tag):
-    try:
-        r = read.get_tag(tag)
-        if r == '':
-            r = None
-        return r
-    except KeyError: # tag not found return None
-        return None
+	try:
+		r = read.get_tag(tag)
+		if r == '':
+			r = None
+		return r
+	except KeyError: # tag not found return None
+		return None
 
 
 def collapse_umi(reads):
@@ -330,17 +330,17 @@ def detect_PAM(input_file):
 def detect_editing_effect_input(input_file, out_dir, window_size = 31):
 	"""prepare input file for detecing editing effect
 
-        Arg:
-                input_file: gRNA_region_coordinates_ori.txt
+		Arg:
+				input_file: gRNA_region_coordinates_ori.txt
 
-	chr14   77674163        77674186        Region2 -       ACGGCCATGTTTATGCACAGTGG ALKBH1
-	chr14   77675744        77675767        Region3 -       AGGATTTCCGAGCTGAAGCAGGG ALKBH1
-	chr14   77674113        77674136        Region4 +       GGACTGCGTGGTTCAAGAGGCGG ALKBH1
-	chr14   77675696        77675719        Region5 +       GTCTACGTGGATTCCCAGTGTGG ALKBH1
+	chr14   77674163		77674186		Region2 -	   ACGGCCATGTTTATGCACAGTGG ALKBH1
+	chr14   77675744		77675767		Region3 -	   AGGATTTCCGAGCTGAAGCAGGG ALKBH1
+	chr14   77674113		77674136		Region4 +	   GGACTGCGTGGTTCAAGAGGCGG ALKBH1
+	chr14   77675696		77675719		Region5 +	   GTCTACGTGGATTCCCAGTGTGG ALKBH1
 
-        Returns:
+		Returns:
 		output_file: gRNA_region_coordinates_31bp.bed, gRNA_region_coordinates_31bp.txt
-                Generate coordinate file by request detection window size (31bp by default)
+				Generate coordinate file by request detection window size (31bp by default)
 	"""
 
 	fo_name1 = out_dir + '/' + 'gRNA_region_coordinates_'+ str(window_size) + 'bp.bed'
@@ -590,7 +590,24 @@ def get_gRNA_mutation_config(config_file):
 		is_10x = is_10x.lower() == 'true'
 	except configparser.NoOptionError:
 		is_10x = True # set default is_10x as True
-	return(gRNA_bam_file, barcode, output_dir, n_consensus_reads_min, min_umi, auto, pool, ref_fasta, structure_gtf, is_10x)
+		
+	# get tags for bam file
+	try: # get customized tags
+		cb_tag = parser.get('config_annotation', 'cb_tag')
+		umi_tag = parser.get('config_annotation', 'umi_tag')
+		gene_tag = parser.get('config_annotation', 'gene_tag')
+	
+	except configparser.NoOptionError:
+		if is_10x: # set default tags for 10X bam file
+			cb_tag = 'CB'
+			umi_tag = 'UB'
+			gene_tag = 'GN'
+		else: # set default tags for non-10X bam file
+			cb_tag='XC'
+			umi_tag='XM'
+			gene_tag='gn'
+	
+	return(gRNA_bam_file, barcode, output_dir, n_consensus_reads_min, min_umi, auto, pool, ref_fasta, structure_gtf, is_10x, cb_tag, umi_tag, gene_tag)
 
 def get_tools_config(config_file):
 	parser = configparser.ConfigParser()
@@ -653,7 +670,7 @@ def read_consensus_sequence_txt(in_file):
 			if cb not in cells.keys():
 				if gRNA_type == 'WildType':
 					cells[cb] = {gRNA: {'WT': 1}}
-                                
+								
 				else:
 					cells[cb] = {gRNA: {gRNA_type: 1}}
 			else:

@@ -5,7 +5,7 @@ from . import utils
 import sys
 import pysam
 
-def generate_consensus_sequence_gRNA(bam_in_file, barcode_in, output_dir, n_consensus_reads_min = 1, is_10x = True):
+def generate_consensus_sequence_gRNA(bam_in_file, barcode_in, output_dir, n_consensus_reads_min, is_10x, cb_tag, umi_tag, gene_tag):
 	"""
 	########### gRNA consensus sequence ########
 	Generate consensus sequence for gRNA library
@@ -15,14 +15,11 @@ def generate_consensus_sequence_gRNA(bam_in_file, barcode_in, output_dir, n_cons
 		barcodes: filtered barcode list
 	return:
 		Write consensus.sequence.gRNA.txt: consensus sequence supported by column 7 (n_consensus_reads) > 1
-		      consensus.bam: consensus sequence in bam file format
+			  consensus.bam: consensus sequence in bam file format
 		Wirte consensus.seqeunce.gRNA.all_umi.txt: all UMI detected consensus sequence 
-		      Non-consensus.bam: alignment not the same as consensus sequence
+			  Non-consensus.bam: alignment not the same as consensus sequence
 
 	"""
-	cb_tag = 'CB' if is_10x else 'XC'
-	umi_tag = 'UB' if is_10x else 'XM'
-	gene_tag = 'GN'if is_10x else 'gn'
 
 	barcodes = utils.read_barcode(barcode_in) # filtered barcode in list
 	print('Total filtered barcodes: ', len(barcodes))
@@ -31,7 +28,10 @@ def generate_consensus_sequence_gRNA(bam_in_file, barcode_in, output_dir, n_cons
 	out_file2 = output_dir + 'consensus.sequence.gRNA.all_umi.txt'
 	out = open(out_file,'w')
 	out2 = open(out_file2, 'w')
-
+	
+	is_10x_lib = is_10x
+	is_10x = True # to enable barcode lookup
+	
 	if is_10x: # cell barcodes discrepancy between gene expression library and crispr capture library, especially for feature barcoding technology
 		lookup_barcodes = utils.lookup_barcodes()
 
@@ -44,7 +44,7 @@ def generate_consensus_sequence_gRNA(bam_in_file, barcode_in, output_dir, n_cons
 		umi = utils.get_read_tag(r, umi_tag) # for now, assume its after corrected ### TOD
 		gene = utils.get_read_tag(r, gene_tag)
 		cigar = r.get_cigar_stats()
-		is_WT = utils.define_WT(r, is_10x)
+		is_WT = utils.define_WT(r, is_10x_lib)
 		if cb == None: # empty
 			continue
 		if umi == None: # no UMI
@@ -154,7 +154,7 @@ def generate_consensus_sequence_gRNA(bam_in_file, barcode_in, output_dir, n_cons
 
 	
 
-def generate_consensus_sequence(bam_in_file, barcode_in, region_chr, region_start, region_end, region_ref, ref_gene, ref_gRNA_id, is_10x = True):
+def generate_consensus_sequence(bam_in_file, barcode_in, region_chr, region_start, region_end, region_ref, ref_gene, ref_gRNA_id, is_10x, cb_tag, umi_tag):
 
 	"""Generate consensus sequence
 	
@@ -172,8 +172,6 @@ def generate_consensus_sequence(bam_in_file, barcode_in, region_chr, region_star
 		Write consensus.sequence.txt
 		
 	"""
-	cb_tag = 'CB' if is_10x else 'XC'
-	umi_tag = 'UB' if is_10x else 'XM'
 	gene_tag = 'XT' # assigned by umi_tools
 
 	region_start = int(region_start) - 1

@@ -15,6 +15,10 @@ Novel single cell RNA-seq analysis combined with CRISPR screens enables the high
 * [Detect CRISPR-Cas9 editing effects in Single cell RNA-seq](https://girafr.readthedocs.io/en/latest/editing_effect.html)
 * [Output files format](https://girafr.readthedocs.io/en/latest/output.html)
 
+**Update:**
+For bam file generated from non-10X libraries: 
+specify `is_10x=False`, together with the correct `cb_tag=<cell barcode tag in the bam file>`, `umi_tag=<UMI tag in the bam file>` and `gene_tag=<gene tag in the bam file>` in the `[config_annotation]` section of your `ConfigFile`
+
 # Citation
 
 GiRAFR improves gRNA detection and annotation in single cell CRISPR screens  

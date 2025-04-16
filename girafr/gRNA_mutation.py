@@ -19,25 +19,25 @@ def run(config):
 	try:
 		config_file = config
 		(samtools, twoBitToFa, featureCounts) = utils.get_tools_config(config_file)
-		(gRNA_bam_file, barcode, output_dir, n_consensus_reads_min, min_umi, auto, pool, ref_fasta, structure_gtf, is_10x) = utils.get_gRNA_mutation_config(config_file)
+		(gRNA_bam_file, barcode, output_dir, n_consensus_reads_min, min_umi, auto, pool, ref_fasta, structure_gtf, is_10x, cb_tag, umi_tag, gene_tag) = utils.get_gRNA_mutation_config(config_file)
 	except configparser.NoSectionError:
 		print("No configuration file found under current folder. See documentation.")
 		sys.exit(2)
 
 	print("Output folder: " + str(output_dir))
 	######## Filtering of mapped reads ########
-	utils.gRNA_bam_filter(gRNA_bam_file, samtools, output_dir) # time consuming
+	#utils.gRNA_bam_filter(gRNA_bam_file, samtools, output_dir) # time consuming
 	print('Prepare bam file. Cost time: ' + str(datetime.now() - time_start) + '\n' )
 
 	######## gRNA consensus sequence ##########
 	print('Generating consensus sequence for gRNA library\n')
 	bam_in_file = output_dir + 'gRNA.sorted.mapped.removedSecondaryAlignment.onlyMappedToGrnaChrom.bam'
-	consensus_sequence.generate_consensus_sequence_gRNA(bam_in_file, barcode, output_dir, n_consensus_reads_min, is_10x = is_10x)
+	consensus_sequence.generate_consensus_sequence_gRNA(bam_in_file, barcode, output_dir, n_consensus_reads_min, is_10x, cb_tag, umi_tag, gene_tag)
 
 	subprocess.call('%s index %s/consensus.bam' % (samtools, output_dir), shell = True)
 
 	####### Identification of mutations in the gRNA consensus ########
-	variant.call_gRNA_variant(output_dir, output_dir + 'consensus.sequence.gRNA.txt', ref_fasta, structure_gtf, is_10x = is_10x)
+	variant.call_gRNA_variant(output_dir, output_dir + 'consensus.sequence.gRNA.txt', ref_fasta, structure_gtf, is_10x, cb_tag, umi_tag, gene_tag)
 
 	####### Assign gRNAs to cells ###########
 	assign_gRNA.assign_gRNA_to_cell(in_file = output_dir + 'consensus.sequence.gRNA.variant.txt', min_umi = min_umi, output_dir = output_dir, auto = auto, pool = pool)

@@ -209,10 +209,10 @@ def assign_gRNA_to_cell(in_file, output_dir, min_umi = 3, auto = False, pool = F
 	
 	if auto: # if use min_umi auto detection
 		if pool: # if calculate min umi thresholds together with variant gRNA of the same guide
-			gRNA_min_umi = detect_gRNA_umi_thresolds_pool(output_dir)
+			gRNA_min_umi = detect_gRNA_umi_thresolds_pool(output_dir, output_dir + '/consensus.count.matrix') # debug
 			print('gRNA umi thresold auto and pool detection is enabled')
 		else:
-			gRNA_min_umi = detect_gRNA_umi_thresolds(output_dir)
+			gRNA_min_umi = detect_gRNA_umi_thresolds(output_dir, output_dir + '/consensus.count.matrix')
 			print('gRNA umi thresold auto detection is enabled')
 
 	cells = {}
