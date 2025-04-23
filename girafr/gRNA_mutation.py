@@ -12,7 +12,7 @@ import configparser
 import sys
 
 
-def run(config):
+def run(config, threads):
 	time_start = datetime.now()
 	print('gRNA mutation profiling:', str(time_start),'\n')
 
@@ -26,7 +26,7 @@ def run(config):
 
 	print("Output folder: " + str(output_dir))
 	######## Filtering of mapped reads ########
-	#utils.gRNA_bam_filter(gRNA_bam_file, samtools, output_dir) # time consuming
+	utils.gRNA_bam_filter(gRNA_bam_file, samtools, output_dir, threads) # time consuming
 	print('Prepare bam file. Cost time: ' + str(datetime.now() - time_start) + '\n' )
 
 	######## gRNA consensus sequence ##########
@@ -34,7 +34,7 @@ def run(config):
 	bam_in_file = output_dir + 'gRNA.sorted.mapped.removedSecondaryAlignment.onlyMappedToGrnaChrom.bam'
 	consensus_sequence.generate_consensus_sequence_gRNA(bam_in_file, barcode, output_dir, n_consensus_reads_min, is_10x, cb_tag, umi_tag, gene_tag)
 
-	subprocess.call('%s index %s/consensus.bam' % (samtools, output_dir), shell = True)
+	subprocess.call(f'{samtools} index -@ {threads} {output_dir}/consensus.bam', shell=True)
 
 	####### Identification of mutations in the gRNA consensus ########
 	variant.call_gRNA_variant(output_dir, output_dir + 'consensus.sequence.gRNA.txt', ref_fasta, structure_gtf, is_10x, cb_tag, umi_tag, gene_tag)

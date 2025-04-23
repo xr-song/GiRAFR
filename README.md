@@ -16,8 +16,8 @@ Novel single cell RNA-seq analysis combined with CRISPR screens enables the high
 * [Output files format](https://girafr.readthedocs.io/en/latest/output.html)
 
 **Update:**
-For bam file generated from non-10X libraries: 
-specify `is_10x=False`, together with the correct `cb_tag=<cell barcode tag in the bam file>`, `umi_tag=<UMI tag in the bam file>` and `gene_tag=<gene tag in the bam file>` in the `[config_annotation]` section of your `ConfigFile`
+- [x] For bam file generated from non-10X libraries: specify `is_10x=False`, together with the correct `cb_tag=<cell barcode tag in the bam file>`, `umi_tag=<UMI tag in the bam file>` and `gene_tag=<gene tag in the bam file>` in the `[config_annotation]` section of your `ConfigFile`
+- [x] Use `--threads` to specify the number of CPUs avaiable for `samtools` multithreading. e.g., `--threads $SLURM_CPUS_PER_TASK`
 
 # Citation
 

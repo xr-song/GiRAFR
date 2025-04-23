@@ -230,7 +230,36 @@ def which_structure(structure_dict, gene, pos):
 				out = s
 	return out
 
-def gRNA_bam_filter(input_file, samtools, output_dir):
+def gRNA_bam_filter(input_file, samtools, output_dir, threads=4):
+    """Filter gRNA library bam file
+
+    Args:
+        input_file: gRNA library bam file mapped to custom reference with oligo pool as artificial chromosome
+        samtools: path to samtools
+        output_dir: directory to save output
+        threads: number of threads to use (default is 4)
+
+    Returns:
+        Filtered gRNA library bam file with secondary alignments and non-gRNA reads removed
+    """
+    subprocess.call('mkdir -p ' + output_dir + '/_tmp', shell = True)
+    tmp_dir = output_dir + '/_tmp'
+    subprocess.call(f'{samtools} sort -@ {threads} {input_file} -o {tmp_dir}/gRNA.sorted.bam', shell=True)
+    subprocess.call(f'{samtools} index -@ {threads} {tmp_dir}/gRNA.sorted.bam', shell=True)
+    subprocess.call(f'{samtools} view -H {tmp_dir}/gRNA.sorted.bam > {tmp_dir}/header', shell=True)
+    subprocess.call(f'{samtools} view -@ {threads} -b -F 4 {tmp_dir}/gRNA.sorted.bam > {tmp_dir}/gRNA.sorted.mapped.bam', shell=True)
+    subprocess.call(f'{samtools} view -@ {threads} -b -F 256 {tmp_dir}/gRNA.sorted.mapped.bam > {tmp_dir}/gRNA.sorted.mapped.removedSecondaryAlignment.bam', shell=True)
+
+    subprocess.call(f"{samtools} view {tmp_dir}/gRNA.sorted.mapped.removedSecondaryAlignment.bam | grep 'chrom' > {tmp_dir}/gRNA.sorted.mapped.removedSecondaryAlignment.onlyMappedToGrnaChrom.sam", shell=True)
+    subprocess.call(f"cat {tmp_dir}/header {tmp_dir}/gRNA.sorted.mapped.removedSecondaryAlignment.onlyMappedToGrnaChrom.sam > {tmp_dir}/tmp.sam", shell=True)
+
+    subprocess.call(f'{samtools} view -@ {threads} -S -b {tmp_dir}/tmp.sam > {output_dir}/gRNA.sorted.mapped.removedSecondaryAlignment.onlyMappedToGrnaChrom.bam', shell=True)
+    subprocess.call(f'{samtools} index -@ {threads} {output_dir}/gRNA.sorted.mapped.removedSecondaryAlignment.onlyMappedToGrnaChrom.bam', shell=True)
+
+    subprocess.call(f'rm -r {tmp_dir}', shell=True)
+
+
+def gRNA_bam_filter_v0(input_file, samtools, output_dir):
 	"""Filter gRNA library bam file
 	Arg:
 		input_file: gRNA library bam file mapped to custom reference with oligo pool as artificial chromosome

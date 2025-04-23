@@ -29,9 +29,6 @@ def generate_consensus_sequence_gRNA(bam_in_file, barcode_in, output_dir, n_cons
 	out = open(out_file,'w')
 	out2 = open(out_file2, 'w')
 	
-	is_10x_lib = is_10x
-	is_10x = True # to enable barcode lookup
-	
 	if is_10x: # cell barcodes discrepancy between gene expression library and crispr capture library, especially for feature barcoding technology
 		lookup_barcodes = utils.lookup_barcodes()
 
@@ -44,7 +41,7 @@ def generate_consensus_sequence_gRNA(bam_in_file, barcode_in, output_dir, n_cons
 		umi = utils.get_read_tag(r, umi_tag) # for now, assume its after corrected ### TOD
 		gene = utils.get_read_tag(r, gene_tag)
 		cigar = r.get_cigar_stats()
-		is_WT = utils.define_WT(r, is_10x_lib)
+		is_WT = utils.define_WT(r, is_10x)
 		if cb == None: # empty
 			continue
 		if umi == None: # no UMI
